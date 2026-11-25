@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bloch Sphere Synthwave Odyssey - Quantum SU(2) Pulse Arcade</title>
+    
+    <!-- Tipografías Google Fonts de alta fidelidad: Orbitron, Press Start 2P, Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Orbitron:wght@500;700;900&family=Press+Start+2P&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Encabezado Arcade Outrun Synthwave -->
+    <header class="arcade-header">
+        <div class="brand-container">
+            <h1>BLOCH SPHERE SYNTHWAVE ODYSSEY</h1>
+            <span class="brand-subtitle">Capa 4 • Control Coherente SU(2) & Oscilaciones de Rabi</span>
+        </div>
+        <div class="header-actions">
+            <button id="btn-export-qasm" class="btn-secondary" title="Exportar secuencia a OpenQASM 3.0 / Cirq">⚡ EXPORTAR QASM</button>
+        </div>
+    </header>
+
+    <!-- Tablero Principal de Juego y Visualizador 3D -->
+    <main class="main-dashboard">
+        
+        <!-- Panel Izquierdo: Marcadores de Coherencia y Ecuaciones de Bloch -->
+        <aside class="arcade-panel telemetry-panel">
+            <div class="panel-title">
+                <span>Telemetría Cuántica</span>
+                <span style="font-size: 0.7em; color: var(--neon-pink);">SU(2)</span>
+            </div>
+
+            <div class="score-badge">
+                <div class="label">Puntuación de Resonancia</div>
+                <div id="score-val" class="value">0</div>
+            </div>
+
+            <div class="score-badge">
+                <div class="label">Multiplicador Combo</div>
+                <div id="combo-val" class="value" style="color: var(--neon-pink);">0</div>
+            </div>
+
+            <!-- Medidor de Pureza y Desfase T1 / T2 -->
+            <div class="quantum-health">
+                <div class="bar-header">
+                    <span>Pureza Tr(ρ²)</span>
+                    <span id="purity-val" style="color: var(--neon-cyan); font-weight: bold;">100.0%</span>
+                </div>
+                <div class="bar-outer">
+                    <div id="purity-bar" class="bar-inner"></div>
+                </div>
+            </div>
+
+            <!-- Parámetros físicos configurables de Lindblad -->
+            <div class="slider-group">
+                <label for="slider-t1">
+                    <span>Relajación T₁ (Longitudinal)</span>
+                    <span id="t1-val" style="color: var(--neon-yellow);">14.0s</span>
+                </label>
+                <input id="slider-t1" type="range" min="3" max="30" step="0.5" value="14">
+            </div>
+
+            <div class="slider-group">
+                <label for="slider-t2">
+                    <span>Desfase T₂ (Transversal)</span>
+                    <span id="t2-val" style="color: var(--neon-yellow);">9.0s</span>
+                </label>
+                <input id="slider-t2" type="range" min="2" max="20" step="0.5" value="9">
+            </div>
+
+            <!-- Récord Máximo -->
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: auto;">
+                <span>Máximo Récord: </span>
+                <strong id="high-score-val" style="color: var(--neon-yellow);">0</strong>
+            </div>
+        </aside>
+
+        <!-- Viewport Central: Esfera de Bloch 3D con Pista de Objetivos Rítmicos -->
+        <section class="arcade-panel viewport-panel">
+            <!-- Barra de progreso superior -->
+            <div class="viewport-overlay">
+                <div id="song-time-val" class="song-timer">0:00</div>
+                <div class="progress-track">
+                    <div id="song-progress-bar" class="progress-fill"></div>
+                </div>
+            </div>
+
+            <!-- Canvas 3D Proyectivo de la Esfera de Bloch -->
+            <canvas id="bloch-canvas"></canvas>
+
+            <!-- Feedback de acierto flotante (PERFECT / GREAT / GOOD / MISS) -->
+            <div id="rating-feedback" class="rating-overlay"></div>
+        </section>
+
+        <!-- Panel Derecho: Consola de Control de Pulsos y Compuertas -->
+        <aside class="arcade-panel controls-panel">
+            <div class="panel-title">
+                <span>Pulsos de Microondas</span>
+                <span style="font-size: 0.7em; color: var(--neon-yellow);">MW RF</span>
+            </div>
+
+            <!-- Botón Maestro de Pista Musical -->
+            <button id="btn-play-track" class="btn-primary">▶ INICIAR PISTA RÍTMICA</button>
+
+            <!-- Selector de Dificultad -->
+            <div class="slider-group">
+                <label for="difficulty-select">
+                    <span>Dificultad de Tempo</span>
+                </label>
+                <select id="difficulty-select" style="background: rgba(0,0,0,0.5); color: #fff; border: 1px solid var(--neon-cyan); padding: 0.5rem; border-radius: 4px; font-family: 'Orbitron';">
+                    <option value="EASY">Cadencia Lenta (Easy)</option>
+                    <option value="NORMAL" selected>Rabi Groove (Normal)</option>
+                    <option value="EXPERT">Overdrive SU(2) (Expert)</option>
+                </select>
+            </div>
+
+            <!-- Botón Clave de Hahn Spin Echo -->
+            <button id="btn-spin-echo" class="btn-echo" title="Pulso Pi de refocalización (Tecla E)">
+                🌀 ECO DE ESPÍN (HAHN) [E]
+            </button>
+
+            <!-- Rejilla de Compuertas de Clifford & Rotaciones -->
+            <div class="gates-grid">
+                <button class="btn-gate" data-gate="X">
+                    <span>Pauli X</span>
+                    <span class="key">[X]</span>
+                </button>
+                <button class="btn-gate" data-gate="Y">
+                    <span>Pauli Y</span>
+                    <span class="key">[Y]</span>
+                </button>
+                <button class="btn-gate" data-gate="Z">
+                    <span>Pauli Z</span>
+                    <span class="key">[Z]</span>
+                </button>
+                <button class="btn-gate" data-gate="H">
+                    <span>Hadamard</span>
+                    <span class="key">[H]</span>
+                </button>
+                <button class="btn-gate" data-gate="S">
+                    <span>Phase S</span>
+                    <span class="key">[S]</span>
+                </button>
+                <button class="btn-gate" data-gate="T">
+                    <span>Gate T</span>
+                    <span class="key">[T]</span>
+                </button>
+            </div>
+
+            <button id="btn-reset-state" class="btn-secondary" style="margin-top: auto;">↺ REINICIAR A ESTADO |0⟩ [R]</button>
+        </aside>
+
+    </main>
+
+    <!-- Modal de Exportación OpenQASM 3.0 / Cirq -->
+    <div id="qasm-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚡ Circuito Compilado: OpenQASM 3.0 & Google Cirq</h2>
+                <button id="btn-close-modal" class="btn-close">&times;</button>
+            </div>
+            <div>
+                <label style="font-size: 0.8rem; color: var(--neon-cyan); font-weight: bold;">OpenQASM 3.0 (IBM Quantum / Amazon Braket):</label>
+                <textarea id="qasm-output" class="code-area" readonly></textarea>
+                <button id="btn-copy-qasm" class="btn-secondary" style="margin-top: 0.3rem;">Copiar QASM</button>
+            </div>
+            <div>
+                <label style="font-size: 0.8rem; color: var(--neon-pink); font-weight: bold;">Google Cirq Python Script:</label>
+                <textarea id="cirq-output" class="code-area" readonly></textarea>
+                <button id="btn-copy-cirq" class="btn-secondary" style="margin-top: 0.3rem;">Copiar Cirq</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script de Inicialización ES2024 -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
